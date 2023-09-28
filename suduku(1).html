@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>canvas数独</title>
+	<style type="text/css">
+		#div1 {
+			position:relative;
+		}
+		#div2 {
+			position:relative;
+		}
+		#divA,#divB,#divD {
+			position:absolute;
+			left : 40%;
+			transform: translate3d(-50%, 0, 0)
+		}
+		#divC {
+			position:absolute;
+			left : 25%;
+			margin:0 300px;
+		}
+	</style>
+</head>
+<body>
+	<div id="div1">
+		<div id="div2">
+			<div id="divA"><canvas id="canA" width="400" height="400"></canvas></div>
+			<div id="divD"><canvas id="canD" width="400" height="400"></canvas></div>
+			<div id="divB"><canvas id="canB" width="400" height="400"></canvas></div>
+		</div>
+		<div id="divC"><canvas id="canC" width="60" height="400"></canvas></div>
+	</div>
+	<script>
+		//用来获取不重复的随机数的方法
+		const getRandomNum = function (countNum) {
+  			let arr = [];
+  			// 在此处补全代码
+  			function produceNum(){
+ 			   let num=Math.floor((Math.random()*(88)))
+ 			   if(arr.indexOf(num)==-1){ //判断不存在就push
+ 			     arr.push(num)
+ 			   }else{
+ 			     produceNum() //存在了重新调用
+ 			   };
+ 			   if(arr.length<countNum){ //判断数组长度是否小于所需长度
+ 			     produceNum();
+ 			   }
+ 			 }
+ 			 produceNum()
+ 			 return arr;
+			};
+
+		function difficult(level,arr){
+			//难度一共三档,分别为123,数字越大越难
+			let difficult_level = 1;
+			   //难度转化为具体蒙版数量
+			   let ranarr = getRandomNum(level*25)
+			   //蒙版动作
+			   for(var i = 0; i < ranarr.length; i++) {
+					let first = parseInt(ranarr[i]/10);
+					let second = ranarr[i]  % 10;
+					//console.log(first);
+					//console.log(second);
+					arr[first][second] = 0;
+				}
+		}
+		function drawLineA(pen, w, h){//画边框粗线
+			var lineW = pen.lineWidth;//线宽
+			pen.strokeRect(lineW/2, lineW/2, w-lineW, h-lineW);//最外矩形框
+			//横向两条粗线
+			pen.beginPath();
+			pen.moveTo(lineW/2, h/3);
+			pen.lineTo(w-lineW, h/3);
+			pen.moveTo(lineW/2, h/3*2);
+			pen.lineTo(w-lineW, h/3*2);
+			pen.closePath();
+			pen.stroke();
+			//纵向两条粗线
+			pen.beginPath();
+			pen.moveTo(w/3, lineW/2);
+			pen.lineTo(w/3, h-lineW);
+			pen.moveTo(w/3*2, lineW/2);
+			pen.lineTo(w/3*2, h-lineW);
+			pen.closePath();
+			pen.stroke();
+		}
+		function drawLineB(pen, w, h){//画边框细线
+			var lineW = pen.lineWidth;//线宽
+			pen.beginPath();
+			for(let i = 1; i <= 8; i++){//算上中间两条实线，一共8条线
+				if(i%3 != 0){//第3/6条不需要画
+					//横向8条
+					pen.moveTo(lineW/2, h/9*i);
+					pen.lineTo(w-lineW, h/9*i);
+					//纵向8条
+					pen.moveTo(w/9*i, lineW/2);
+					pen.lineTo(w/9*i, h-lineW);
+				}
+			}
+			pen.closePath();
+			pen.stroke();
+		}
+	</script>
+
+	<script >
+		let myA = document.getElementById("canA");
+		let w = myA.width;
+		let h = myA.height;
+
+		let penA = canA.getContext('2d');// 2d指定了二维绘图
+		penA.lineWidth = 4;//设置线宽
+		penA.strokeStyle = "rgba(65, 105, 225, 0.7)";//设置颜色及透明度
+		drawLineA(penA, w, h);//画边框粗线
+
+		penA.lineWidth = 2;
+		penA.strokeStyle = "rgba(65, 105, 225, 0.3)";
+		drawLineB(penA, w, h);//画边框细线
+		
+		penA.font = "30px 微软雅黑";
+		penA.textAlign = "center";
+	
+		url = 'http://10.133.16.97:8080/getdata?'
+		//查了一下处理post请求的方法感觉很麻烦,在前端实现难度区分应该会简单很多
+
+		let arr = []; // 声明一个空数组
+
+		function Get1(a, level) {
+		return new Promise((resolve, reject) => {
+			fetch(a + "timestamp=1234", { mode: 'cors' })
+			.then(response => response.json())
+			.then(data => {
+				let arr = data.grid;
+				difficult(level, arr);
+				resolve(arr); // 使用 resolve 方法返回 arr 值
+			})
+			.catch(error => {
+				console.log("出错了");
+				reject(error); // 使用 reject 方法返回错误信息
+			});
+		});
+		}
+
+		// 调用 Get1 函数，并将 arr 添加到 resultArray 数组中
+		Get1(url, 2)
+		.then(arr => {
+			console.log(arr); // 在这里可以访问和处理返回的 arr 数据
+			arr.push(...arr); // 将 arr 添加到 resultArray 数组中
+			drawBlock(penA, w, h, arr);
+
+			//点击选中方块==>操作画布B
+			let penB = canB.getContext('2d');
+			let lastXY = [];//记录上次点击的方块
+			let penC = canC.getContext('2d');
+			let myFlag = false;//C区有没有图。true有图，false无图
+			canB.onclick = function (e) {
+				if(lastXY.length != 0){//清除上次绘制的方块
+					penB.clearRect(w/9*lastXY[0], h/9*lastXY[1], w/9, h/9);
+				}
+				//绘制本次选中的块
+				var e = event || window.event;
+				let blocki = Math.floor(e.offsetX/(w/9));
+				let blockj = Math.floor(e.offsetY/(h/9));
+				penB.fillStyle = "rgba(255, 97, 0, 0.1)";
+				penB.fillRect(w/9*blocki, h/9*blockj, w/9, h/9);
+				lastXY = [blocki, blockj];//记录下来
+				if(arr[blockj][blocki] == 0 && !myFlag){//选中框能修改时，C区绘制1-9数字
+					drawAllNum(penC, w/9, h);
+					myFlag = true;
+				} else if(arr[blockj][blocki] != 0){//清理C区
+					penC.clearRect(0, 0, w/9, h);
+					myFlag = false;
+				}		
+			}
+
+			//点击选中右侧数字方块==>点击画布C，操作画布D
+			let penD = canD.getContext('2d');
+			canC.onclick = function (e) {
+				if(lastXY.length != 0){//需要选中方块
+					let myi = lastXY[1];
+					let myj = lastXY[0];
+					if(arr[myi][myj] == 0){//数组该值等于0才能填入新值
+						//绘制本次选中的块
+						var e = event || window.event;
+						let blocki = Math.floor(e.offsetX/(w/9));
+						let blockj = Math.floor(e.offsetY/(h/9));
+						penD.clearRect(w/9*lastXY[0], h/9*lastXY[1], w/9, h/9);
+						penD.font = "30px 微软雅黑";
+						penD.textAlign = "center";
+						penD.fillStyle = "blueviolet";
+						penD.fillText(blockj+1+"", w/9*myj+w/9/2, h/9*myi+h/9/3*2);
+					}
+				}
+			}
+
+		})
+		.catch(error => {
+			console.log("发生错误:", error);
+		});
+	   
+		function drawBlock(pen, w, h, arr){//给每个方块填入数字及底色
+		for(let i = 0; i < arr.length; i++){
+			for(let j = 0; j < arr[i].length; j++){
+				if(arr[i][j] != 0){//不为0时才绘制
+					pen.fillStyle = "rgba(0, 0, 0, 0.06)";
+					pen.fillRect(w/9*j, h/9*i, w/9, h/9);//绘制矩形底色
+					pen.fillStyle = "black";
+					pen.fillText(arr[i][j]+"", w/9*j+w/9/2, h/9*i+h/9/3*2);//绘制文字
+					}
+				}
+			}
+		}
+
+		function getAllNumArr(min, max){//获取1-9数字数组
+			let arrA = [];
+			for(let i = min, j = 0; i <= max; i++,j++){
+				arrA[j] = i;//1-9顺序数组
+			}
+			return arrA;
+		}
+
+		function drawAllNum(pen, w, h){//竖向绘制1-9数字
+			pen.font = "30px 微软雅黑";
+			pen.textAlign = "center";
+			let arrA = getAllNumArr(1, 9);
+			for(let i = 0; i < arrA.length; i++){
+				if(i%2 == 0){
+					pen.fillStyle = "rgba(0, 0, 255, 0.1)";
+				} else {
+					pen.fillStyle = "rgba(255, 255, 0, 0.1)";
+				}
+				pen.fillRect(0, h/9*i, w, h/9);
+				pen.fillStyle = "blueviolet";
+				pen.fillText(arrA[i]+"", w/2, h/9*i+h/9/3*2);
+			}
+		}
+
+	</script>
+
+</body>
+
+</html>
