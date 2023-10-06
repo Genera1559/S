@@ -9,13 +9,20 @@
             width: 100px;
             height:100px; 
         }
+        .fixed-input {
+            position: fixed;
+            right: 100px;
+            top: 400px;
+            width: 200px;
+            height:50px; 
+       }
     </style>
 </head>
 <body>
 
-    <iframe src="suduku(1).html" width="500" height="420"></iframe>
-    <iframe src="suduku(1).html" width="500" height="420"></iframe>
-    <iframe src="suduku(1).html" width="500" height="420"></iframe>
+    <iframe src="suduku.html" width="500" height="500"></iframe>
+    <iframe src="suduku.html" width="500" height="500"></iframe>
+    <iframe src="suduku.html" width="500" height="500"></iframe>
 
     <body>
         <br>
@@ -24,9 +31,9 @@
         </script>
     </body>
 
-    <iframe src="suduku(1).html" width="500" height="420"></iframe>
-    <iframe src="suduku(1).html" width="500" height="420"></iframe>
-    <iframe src="suduku(1).html" width="500" height="420"></iframe>
+    <iframe src="suduku.html" width="500" height="500"></iframe>
+    <iframe src="suduku.html" width="500" height="500"></iframe>
+    <iframe src="suduku.html" width="500" height="500"></iframe>
 
     <body>
         <br>
@@ -35,15 +42,21 @@
         </script>
     </body>
 
-    <iframe src="suduku(1).html" width="500" height="420"></iframe>
-    <iframe src="suduku(1).html" width="500" height="420"></iframe>
-    <iframe src="suduku(1).html" width="500" height="420"></iframe>
+    <iframe src="suduku.html" width="500" height="500"></iframe>
+    <iframe src="suduku.html" width="500" height="500"></iframe>
+    <iframe src="suduku.html" width="500" height="500"></iframe>
 
     <button id="refreshBtn">刷新页面</button>
+    <input type="text" id="myInput" class="fixed-input" placeholder="难度输入:1、2或3" />
+
+
     <script>
         document.getElementById('refreshBtn').addEventListener('click', function () {
             location.reload();
         });
+        let a = 3
+        localStorage.setItem('message', a);
+        
     </script>
 </body>
 </html>

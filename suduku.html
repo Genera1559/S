@@ -21,6 +21,21 @@
 			left : 25%;
 			margin:0 300px;
 		}
+		#resolve {
+            position: fixed;
+            top: 425px;
+            right: 100px;
+            width: 100px;
+            height:50px; 
+        }
+		#a {
+            position: fixed;
+            top: 425px;
+            right: 225px;
+            width: 100px;
+            height:50px; 
+        }
+
 	</style>
 </head>
 <body>
@@ -32,7 +47,11 @@
 		</div>
 		<div id="divC"><canvas id="canC" width="60" height="400"></canvas></div>
 	</div>
+	<button id="resolve">显示答案</button>
+	<button id="a">求解答案</button>
+
 	<script>
+
 		//用来获取不重复的随机数的方法
 		const getRandomNum = function (countNum) {
   			let arr = [];
@@ -66,6 +85,7 @@
 					arr[first][second] = 0;
 				}
 		}
+
 		function drawLineA(pen, w, h){//画边框粗线
 			var lineW = pen.lineWidth;//线宽
 			pen.strokeRect(lineW/2, lineW/2, w-lineW, h-lineW);//最外矩形框
@@ -121,7 +141,7 @@
 		penA.font = "30px 微软雅黑";
 		penA.textAlign = "center";
 	
-		url = 'http://10.133.35.103:8080/getdata?'
+		const url = 'http://10.133.35.103:8080/getdata?';
 		//查了一下处理post请求的方法感觉很麻烦,在前端实现难度区分应该会简单很多
 
 		let arr = []; // 声明一个空数组
@@ -132,8 +152,11 @@
 			.then(response => response.json())
 			.then(data => {
 				let arr = data.grid;
+				let arr_resolve = JSON.parse(JSON.stringify(arr));
 				difficult(level, arr);
-				resolve(arr); // 使用 resolve 方法返回 arr 值
+				const result = { var1: arr_resolve, var2: arr };
+
+				resolve(result); // 使用 resolve 方法返回 arr 值
 			})
 			.catch(error => {
 				console.log("出错了");
@@ -141,13 +164,62 @@
 			});
 		});
 		}
+		// 设置一个函数，用于求解数组,输入url和需求解数组
+		function Resolve(url, arr, callback) {
+			const array_1 = arr;
+			const url_1 = url;
+			const xhr = new XMLHttpRequest();
+			xhr.open('POST', url_1, true);
+
+			xhr.onload = function() {
+				if (xhr.status === 200) {
+					console.log('数组上传成功!');
+					const responseText = xhr.responseText;
+					const responseJSON = JSON.parse(responseText);
+					console.log('服务器返回的数据:', responseJSON);
+					callback(responseJSON); // 调用回调函数，并传递响应数据
+					exportJSON(responseJSON); // 导出 JSON 数据
+				} 
+				else {
+					console.error('数组上传失败!');
+				}
+			};
+			
+			xhr.send(JSON.stringify(array_1));
+		}
+
+		function exportJSON(data) {
+			const jsonStr = JSON.stringify(data);
+			// 在这里执行导出操作，例如写入文件或发送到其他服务端
+			console.log('导出的 JSON 数据:', jsonStr);
+			drawBlock(penA, w, h, jsonStr);
+		}
+		// 设置一个框，设置难度
+		const message = localStorage.getItem('message');
+		// 设置一个函数，显示求解后的答案
 
 		// 调用 Get1 函数，并将 arr 添加到 resultArray 数组中
-		Get1(url, 2)
-		.then(arr => {
-			console.log(arr); // 在这里可以访问和处理返回的 arr 数据
+
+		Get1(url, message)
+		.then(result => {
+			console.log(result.var2); // 在这里可以访问和处理返回的 arr 数据
+			console.log(result.var1); // 在这里可以访问和处理返回的 arr_resolve 数据
+			arr = result.var2;
+			arr_resolve = result.var1;
 			arr.push(...arr); // 将 arr 添加到 resultArray 数组中
 			drawBlock(penA, w, h, arr);
+
+			//这是显示挖空前的原答案
+			document.getElementById('resolve').addEventListener('click', function () {
+				drawBlock(penA, w, h, arr_resolve);
+			});
+			//进行求解后的答案
+
+			document.getElementById('a').addEventListener('click', function() {
+				let url_3 = 'http://10.133.35.103:8080';
+				let arr_4 = result.var2; // 假设你定义了一个名为 arr 的数组
+				Resolve(url_3, arr_4, callback);
+			});
 
 			//点击选中方块==>操作画布B
 			let penB = canB.getContext('2d');
