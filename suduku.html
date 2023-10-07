@@ -86,6 +86,8 @@
 				}
 		}
 
+		
+
 		function drawLineA(pen, w, h){//画边框粗线
 			var lineW = pen.lineWidth;//线宽
 			pen.strokeRect(lineW/2, lineW/2, w-lineW, h-lineW);//最外矩形框
@@ -192,7 +194,6 @@
 			const jsonStr = JSON.stringify(data);
 			// 在这里执行导出操作，例如写入文件或发送到其他服务端
 			console.log('导出的 JSON 数据:', jsonStr);
-			drawBlock(penA, w, h, jsonStr);
 		}
 		// 设置一个框，设置难度
 		const message = localStorage.getItem('message');
@@ -200,7 +201,7 @@
 
 		// 调用 Get1 函数，并将 arr 添加到 resultArray 数组中
 
-		Get1(url, message)
+		Get1(url, 2)
 		.then(result => {
 			console.log(result.var2); // 在这里可以访问和处理返回的 arr 数据
 			console.log(result.var1); // 在这里可以访问和处理返回的 arr_resolve 数据
@@ -216,9 +217,7 @@
 			//进行求解后的答案
 
 			document.getElementById('a').addEventListener('click', function() {
-				let url_3 = 'http://10.133.35.103:8080';
-				let arr_4 = result.var2; // 假设你定义了一个名为 arr 的数组
-				Resolve(url_3, arr_4, callback);
+				clickButton(result.var2)
 			});
 
 			//点击选中方块==>操作画布B
@@ -271,6 +270,23 @@
 			console.log("发生错误:", error);
 		});
 	   
+		function clickButton(arr) {
+			let url_3 = 'http://10.133.35.103:8080';
+			let arr_4 = arr; 
+			console.log(arr_4);
+			let arr_5 = arr_4.map(row => row.slice(0, 9));
+			console.log(arr_5);
+			let arr_6 = {"grid": []};
+			arr_6.grid = arr_5;
+
+			console.log(arr_6);
+			Resolve(url_3, arr_6, function(responseJSON) {
+				// 在这里定义和使用回调函数
+				console.log(responseJSON);
+				drawBlock(penA, w, h, responseJSON.grid);
+			});
+		}
+
 		function drawBlock(pen, w, h, arr){//给每个方块填入数字及底色
 		for(let i = 0; i < arr.length; i++){
 			for(let j = 0; j < arr[i].length; j++){

@@ -9,10 +9,17 @@
             width: 100px;
             height:100px; 
         }
+        #showresolve {
+            position: fixed;
+            top: 350px;
+            right: 200px;
+            width: 100px;
+            height:100px; 
+        }
         .fixed-input {
             position: fixed;
             right: 100px;
-            top: 400px;
+            top: 500px;
             width: 200px;
             height:50px; 
        }
@@ -47,6 +54,7 @@
     <iframe src="suduku.html" width="500" height="500"></iframe>
 
     <button id="refreshBtn">刷新页面</button>
+    <button id="showresolve">求解全部数组</button>
     <input type="text" id="myInput" class="fixed-input" placeholder="难度输入:1、2或3" />
 
 
@@ -54,6 +62,11 @@
         document.getElementById('refreshBtn').addEventListener('click', function () {
             location.reload();
         });
+        document.getElementById('showresolve').addEventListener('click', function () {
+            var iframe = parent.document.getElementById("myFrame");
+            iframe.contentWindow.clickButton();
+        });
+
         let a = 3
         localStorage.setItem('message', a);
         
