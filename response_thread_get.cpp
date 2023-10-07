@@ -72,6 +72,9 @@ void thread_fun(tcp::socket socket, string& response) {
                 //cout << request_body <<endl;
             }
         }
+        else {
+            cout << "题目为空" << endl;
+        }
 
         // 将请求体转换为JSON
         json j_request;
@@ -102,21 +105,32 @@ void thread_fun(tcp::socket socket, string& response) {
         }
 
         // 调用getsuduku函数处理请求
-        json j_response = getsudukuSolve(1,j_request);
-        cout << "答案:" << j_response << endl;
+        try {
+            json j_response = getsudukuSolve(1, j_request);
+            cout << "答案:" << j_response << endl;
+            // 将响应转换为字符串
+            string response_body = j_response.dump();
 
-        // 将响应转换为字符串
-        string response_body = j_response.dump();
+            // 构建响应消息
+            response =
+                response_header +
+                "Content-Length: " + std::to_string(response_body.size()) + "\r\n"
+                "\r\n"
+                + response_body;
 
-        // 构建响应消息
-        response =
-            response_header +
-            "Content-Length: " + std::to_string(response_body.size()) + "\r\n"
-            "\r\n"
-            + response_body;
+            // 发送响应消息
+            boost::asio::write(socket, boost::asio::buffer(response));
+        }
+        catch (const json::exception& e) {
+            cout << "答案获取出错,可能是题目非法" << endl;
+        }
+        
+        
 
-        // 发送响应消息
-        boost::asio::write(socket, boost::asio::buffer(response));
+        
+    }
+    else {
+        cout << "请求方式错误" << endl;
     }
 
     // 关闭socket连接
@@ -142,9 +156,9 @@ int main() {
             acceptor.accept(socket);
             cout << "接收到请求" << endl;
             std::string response;
-            thread_fun(std::move(socket), ref(response));
-            //thread th1(thread_fun, std::move(socket),ref(response));
-            //th1.detach();
+            //thread_fun(std::move(socket), ref(response));
+            thread th1(thread_fun, std::move(socket),ref(response));
+            th1.detach();
 
         }
         io_context.run();
